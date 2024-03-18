@@ -18,7 +18,7 @@ def run_queries(path: str):
     ]
     for idx, query in enumerate(queries):
         start_time = time.time()
-        duckdb.sql(query)
+        frame = duckdb.sql(query).df()
         time_in_ms = (time.time() - start_time) * 1000
         print(f"Execution time for '{idx+1}': {time_in_ms} ms")
 
