@@ -5,16 +5,13 @@ import time
 def run_queries(path: str):
     dataset = f"read_parquet('{path}')"
     queries = [
-        f"SELECT COUNT(*) FROM {dataset};",
-        f"SELECT bool_col_1, AVG(int_col_1) AS avg_int_col_1 FROM {dataset} GROUP BY bool_col_1;",
-        f"SELECT SUM(int_col_2) FROM {dataset} WHERE date_col_1 > '2020-06-01';",
-        f"SELECT date_col_2, COUNT(DISTINCT str_col_2) FROM {dataset} WHERE bool_col_2 = False GROUP BY date_col_2;",
-        f"SELECT bool_col_4, int_col_4, SUM(int_col_4) OVER (PARTITION BY bool_col_4 ORDER BY date_col_3) as running_total FROM {dataset};",
-        f"SELECT int_col_5 FROM {dataset} ORDER BY int_col_5 DESC LIMIT 10;",
-        f"SELECT * FROM {dataset} WHERE int_col_6 BETWEEN 100 AND 200 AND str_col_4 LIKE '%abc%';",
-        f"SELECT str_col_5, AVG(int_col_7) as avg_value FROM {dataset} GROUP BY str_col_5 HAVING AVG(int_col_7) > 500;",
-        f"SELECT AVG(int_col_8) FROM {dataset} WHERE int_col_9 > (SELECT AVG(int_col_9) FROM {dataset});",
-        f"SELECT date_col_4, MAX(int_col_10) - MIN(int_col_10) AS range_int_col_10 FROM {dataset} GROUP BY date_col_4;",
+        f"SELECT deal_region, deal_status, COUNT(*) AS deal_count, AVG(deal_amount) AS average_deal_amount FROM {dataset} GROUP BY deal_region, deal_status ORDER BY average_deal_amount DESC LIMIT 10;",
+        f"SELECT deal_region, AVG(customer_satisfaction) AS avg_satisfaction, COUNT(*) AS responses FROM {dataset} WHERE customer_satisfaction IS NOT NULL GROUP BY deal_region HAVING COUNT(*) > 50 ORDER BY avg_satisfaction DESC LIMIT 5;",
+        f"SELECT EXTRACT(YEAR FROM deal_creation_date) AS year, EXTRACT(MONTH FROM deal_creation_date) AS month, SUM(deal_amount) AS total_deal_amount, COUNT(*) AS deal_count FROM {dataset} WHERE deal_priority > 7 GROUP BY year, month ORDER BY year, month;",
+        f"SELECT animal_name, COUNT(*) AS num_deals FROM {dataset} GROUP BY animal_name ORDER BY num_deals DESC LIMIT 5 UNION ALL SELECT plant_name, COUNT(*) AS num_deals FROM {dataset} GROUP BY plant_name ORDER BY num_deals DESC LIMIT 5;",
+        f"SELECT deal_name, deal_probability, customer_satisfaction FROM {dataset} WHERE deal_probability > 80 AND customer_satisfaction < 3 ORDER BY customer_satisfaction, deal_probability DESC LIMIT 10;",
+        f"SELECT deal_priority, AVG(deal_amount) AS avg_amount FROM {dataset} WHERE deal_status = 'Closed Won' GROUP BY deal_priority ORDER BY deal_priority;",
+        f"SELECT EXTRACT(YEAR FROM deal_close_date) AS year, EXTRACT(MONTH FROM deal_close_date) AS month, COUNT(*) AS deal_count, AVG(sparse_decimal) AS avg_sparse_decimal FROM {dataset} WHERE deal_status = 'Closed Won' AND sparse_decimal IS NOT NULL GROUP BY year, month ORDER BY year, month;",
     ]
     for idx, query in enumerate(queries):
         start_time = time.time()
@@ -23,9 +20,4 @@ def run_queries(path: str):
         print(f"Execution time for '{idx+1}': {time_in_ms} ms")
 
 
-sizes = [1_000_000, 5_000_000]
-
-for size in sizes:
-    file_path = f"./data_{size}_rows.parquet"
-    print(f"Running queries on {file_path}")
-    run_queries(file_path)
+run_queries("DDS*.parquet")
